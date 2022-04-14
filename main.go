@@ -14,24 +14,24 @@ import (
 	"github.com/cavaliergopher/grab/v3"
 )
 
-type ImageApiResponse struct {
-	Url      string `json:"url"`
-	Image_id string `json:"image_id"`
+type ImageAPIResponse struct {
+	URL     string `json:"url"`
+	ImageID string `json:"image_id"`
 
 	Metadata struct {
 		App string `json:"app"`
 	} `json:"metadata"`
 
-	Created_at string `json:"created_at"`
-	Type       string `json:"type"`
+	CreatedAt string `json:"created_at"`
+	Type      string `json:"type"`
 }
 
 func main() {
-	var access_token string
-	flag.StringVar(&access_token, "access_token", "", "gyazo api access token")
+	var accessToken string
+	flag.StringVar(&accessToken, "access_token", "", "gyazo api access token")
 	flag.Parse()
 
-	if access_token == "" {
+	if accessToken == "" {
 		log.Fatal("access_token is required")
 	}
 
@@ -44,19 +44,19 @@ func main() {
 	downloadClient := grab.NewClient()
 	httpClient := &http.Client{}
 
-	var images []ImageApiResponse = requestImages(httpClient, &access_token)
+	images := requestImages(httpClient, &accessToken)
 	fmt.Println("Found", len(images), "images")
 
 	for len(images) != 0 {
 		for _, image := range images {
-			if image.Url == "" { // For some reason non premium API will give empty responses
+			if image.URL == "" { // For some reason non premium API will give empty responses
 				continue
 			}
 
 			fileName := getNewFileName(&image)
 
 			fmt.Println("Processing", fileName)
-			req, err := grab.NewRequest("./images/"+fileName, image.Url)
+			req, err := grab.NewRequest("./images/"+fileName, image.URL)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -77,17 +77,17 @@ func main() {
 			}
 
 			// check for errors
-			if err := resp.Err(); err != nil {
+			if err = resp.Err(); err != nil {
 				fmt.Println("Download failed ❌")
-				log.Fatal(err)
+				log.Panic(err)
 			}
 
 			fmt.Println("Successfully downloaded ✅")
-			deleteImage(httpClient, &access_token, &image.Image_id)
+			deleteImage(httpClient, &accessToken, &image.ImageID)
 			fmt.Println("Successfully deleted from gyazo ✅")
 		}
 
-		images = requestImages(httpClient, &access_token)
+		images = requestImages(httpClient, &accessToken)
 		fmt.Println("Found", len(images), "images")
 	}
 
@@ -95,25 +95,26 @@ func main() {
 }
 
 // Requests image api
-func requestImages(client *http.Client, access_token *string) []ImageApiResponse {
-	resp, err := client.Get("https://api.gyazo.com/api/images?per_page=100&access_token=" + *access_token)
+func requestImages(client *http.Client, accessToken *string) []ImageAPIResponse {
+	resp, err := client.Get("https://api.gyazo.com/api/images?per_page=100&access_token=" + *accessToken)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	json_raw, err := io.ReadAll(resp.Body)
+	jsonRaw, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var images []ImageApiResponse
-	json.Unmarshal(json_raw, &images)
+	var images []ImageAPIResponse
+	json.Unmarshal(jsonRaw, &images)
+
 	return images
 }
 
 // Requests image deletion api
-func deleteImage(client *http.Client, access_token *string, image_id *string) {
-	req, err := http.NewRequest("DELETE", "https://api.gyazo.com/api/images/"+*image_id+"?access_token="+*access_token, nil)
+func deleteImage(client *http.Client, accessToken *string, imageID *string) {
+	req, err := http.NewRequest("DELETE", "https://api.gyazo.com/api/images/"+*imageID+"?access_token="+*accessToken, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -129,10 +130,10 @@ func deleteImage(client *http.Client, access_token *string, image_id *string) {
 }
 
 // Creates a new nice filename from the metadata
-func getNewFileName(image *ImageApiResponse) string {
+func getNewFileName(image *ImageAPIResponse) string {
 	if image.Metadata.App != "" && image.Metadata.App != " " {
-		return strings.ReplaceAll(" ", "_", image.Metadata.App) + "_" + image.Created_at[:len(image.Created_at)-5] + "." + image.Type
+		return strings.ReplaceAll(" ", "_", image.Metadata.App) + "_" + image.CreatedAt[:len(image.CreatedAt)-5] + "." + image.Type
 	}
 
-	return image.Created_at[:len(image.Created_at)-5] + "." + image.Type
+	return image.CreatedAt[:len(image.CreatedAt)-5] + "." + image.Type
 }
