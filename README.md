@@ -1,10 +1,15 @@
 # Gyazo Exporter
 
-## THIS DOES NOT WORK WITHOUT PREMIUM ACCOUNT
+## Usage
 
-Start the free trial to use this program
-(btw the free trial does not include the native export feature :P)
+1. Activate free trial or pay for a month of premium
+2. [Create new application](https://gyazo.com/oauth/applications)
+3. Input name: gyazo-exporter, callback url: http://example.com
+4. Click on the newly made application then "Generate" and copy the text
+5. ``go run . --access_token XXXX``
 
-## If you don't have an API key
+## Run with nix flakes
 
-you can get it from [here](https://gyazo.com/oauth/applications)
+```
+nix run github:ayes-web/gyazo-exporter
+```
