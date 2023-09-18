@@ -70,7 +70,7 @@ func main() {
 			for {
 				select {
 				case <-t.C:
-					fmt.Printf("Transferred %v / %v bytes (%.2f%%)\n", resp.BytesComplete(), resp.Size, 100*resp.Progress())
+					fmt.Printf("Transferred %v / %v bytes (%.2f%%)\n", resp.BytesComplete(), resp.Size(), 100*resp.Progress())
 				case <-resp.Done:
 					break Loop
 				}
@@ -131,9 +131,12 @@ func deleteImage(client *http.Client, accessToken *string, imageID *string) {
 
 // Creates a new nice filename from the metadata
 func getNewFileName(image *ImageAPIResponse) string {
-	if image.Metadata.App != "" && image.Metadata.App != " " {
-		return strings.ReplaceAll(" ", "_", image.Metadata.App) + "_" + image.CreatedAt[:len(image.CreatedAt)-5] + "." + image.Type
+	created_at := image.CreatedAt[:len(image.CreatedAt)-5]
+	raw_name := strings.TrimSpace(image.Metadata.App)
+	if raw_name != "" {
+		name := strings.ReplaceAll(raw_name, " ", "_")
+		return fmt.Sprintf("%s_%s.%s", name, created_at, image.Type)
+	} else {
+		return fmt.Sprintf("%s.%s", created_at, image.Type)
 	}
-
-	return image.CreatedAt[:len(image.CreatedAt)-5] + "." + image.Type
 }
