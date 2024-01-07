@@ -11,5 +11,5 @@
 ## Run with nix flakes
 
 ```
-nix run github:ayes-web/gyazo-exporter
+nix run github:BatteredBunny/gyazo-exporter
 ```
